@@ -6,6 +6,7 @@
  */
 
 #include "SparkIntervalTimer.h"
+#include "E131.h"
 
 // This is the delay-per-brightness step in microseconds.
 // It is calculated based on the frequency of your voltage supply (50Hz or 60Hz)
@@ -28,6 +29,7 @@ int dim = DIM_MAX;                // Dimming level (0-128)  0 = on, 128 = 0ff
 int inc = 1;                      // counting up or down, 1=up, -1=down
 
 IntervalTimer timer;
+E131 e131;
 
 void zero_cross_detect() {
 	zero_cross = true;         // set the boolean to true to tell our dimming function that a zero cross has occured
@@ -62,6 +64,13 @@ void dim_check() {
 int change(String data) {
 	int tmp = data.toInt();
 	// tmp = 100 - tmp;
+	setDim(tmp);
+	return tmp;
+	
+}
+
+int setDim(int tmp) {
+	tmp = map(tmp, 0, 255, 100, 20);
 	if(tmp >= DIM_MAX) {
 		return dim = DIM_MAX;
 	}
@@ -72,9 +81,7 @@ int change(String data) {
 		//dont turn off
 	}
 	return dim = tmp;
-	
 }
-
 
 
 
@@ -100,15 +107,19 @@ void setup()
 	attachInterrupt(PIN_ZERO_CROSS, zero_cross_detect, RISING);
 
 	Particle.variable("dim",dim);
+	e131.begin();
 }
 
-
+int count = 0;
 void loop() {
-  Serial.println(dim);
-//   dim += inc;
-//   if((dim >= DIM_MAX) || (dim <= DIM_MIN)) {
-//     inc *= -1;
-//   }
+	count ++;
+	e131.parsePacket();
 
-  delay(250);
+	if (count%50 == 0) {
+	    Serial.printlnf("R:%d G:%d B:%d",e131.data[1],e131.data[2],e131.data[3]);
+	}
+
+	setDim(e131.data[1]);
+
+	// delay(250);
 }
