@@ -16,10 +16,10 @@ int AC_PIN = D6;                  // Output to Opto Triac
 int PIN_ZERO_CROSS = D5;          // Interrrupt pin
 // Min/Max depends on your circuit
 // This is for my bedside LED lights
-int DIM_MIN = 20;
+int DIM_MIN = 60;
 int DIM_MAX = 117;
 int dim = DIM_MIN;                // Dimming level (0-128)  0 = on, 128 = 0ff
-int inc = 1;                      // counting up or down, 1=up, -1=down
+int inc = 5;                      // counting up or down, 1=up, -1=down
 
 IntervalTimer timer;
 
@@ -71,5 +71,5 @@ void loop() {
     inc *= -1;
   }
 
-  delay(500);
+  delay(100);
 }
