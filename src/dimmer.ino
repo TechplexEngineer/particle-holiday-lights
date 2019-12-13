@@ -12,8 +12,8 @@ int freqStep = 65;
 
 volatile int counter = 0;         // Variable to use as a counter volatile as it is in an interrupt
 volatile boolean zero_cross = 0;  // Boolean to store a "switch" to tell us if we have crossed zero
-int AC_PIN = D3;                  // Output to Opto Triac
-int PIN_ZERO_CROSS = D2;          // Interrrupt pin
+int AC_PIN = D6;                  // Output to Opto Triac
+int PIN_ZERO_CROSS = D5;          // Interrrupt pin
 // Min/Max depends on your circuit
 // This is for my bedside LED lights
 int DIM_MIN = 90;
