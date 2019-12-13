@@ -19,32 +19,49 @@ int freqStep = 65;
 
 volatile int counter = 0;         // Variable to use as a counter volatile as it is in an interrupt
 volatile boolean zero_cross = 0;  // Boolean to store a "switch" to tell us if we have crossed zero
-int AC_PIN = D7;                  // Output to Opto Triac
-int PIN_ZERO_CROSS = D6;          // Interrrupt pin
+int AC_PIN = D6;                  // Output to Opto Triac
+int PIN_ZERO_CROSS = D5;          // Interrrupt pin
+int DBG_ZC_PIN = D4;
+volatile bool DBG_ZC = false;
+int DBG_TMR_PIN = D3;
+bool DBG_TMR = false;
+
 // Min/Max depends on your circuit
 // This is for my bedside LED lights
-int DIM_MIN = 20;
-int DIM_MAX = 100;
+int DIM_MIN = 0;
+int DIM_MAX = 128;
 int dim = DIM_MAX;                // Dimming level (0-128)  0 = on, 128 = 0ff
 int inc = 1;                      // counting up or down, 1=up, -1=down
 
 IntervalTimer timer;
 E131 e131;
 
+//ISR
 void zero_cross_detect() {
-	zero_cross = true;         // set the boolean to true to tell our dimming function that a zero cross has occured
-	counter = 0;
-	if (dim == DIM_MIN) {
-		// dont turn off (full bright)
-	} else {
-		digitalWrite(AC_PIN, LOW); // turn off TRIAC (and AC)
-	}
-  
+	static unsigned long last_interrupt_time = 0;
+	unsigned long interrupt_time = micros();
+	// If interrupts come faster than 4ms, assume it's a bounce and ignore
+	if (interrupt_time - last_interrupt_time > 1000)
+	{
+		DBG_ZC = !DBG_ZC;
+		digitalWrite(DBG_ZC_PIN, DBG_ZC);
+		zero_cross = true;         // set the boolean to true to tell our dimming function that a zero cross has occured
+		counter = 0;
+		if (dim == DIM_MIN) {
+			// dont turn off (full bright)
+		} else {
+			digitalWrite(AC_PIN, LOW); // turn off TRIAC (and AC)
+		}
+		last_interrupt_time = interrupt_time;
+	} 
 }
 
 
+//Treat as ISR, acutally timer
 // Turn on the TRIAC at the appropriate time
 void dim_check() {
+	DBG_TMR = !DBG_TMR;
+	digitalWrite(DBG_TMR_PIN, DBG_TMR);
   if(zero_cross == true) {
 	if(counter >= dim) {
 		if(dim == DIM_MAX) {
@@ -70,7 +87,7 @@ int change(String data) {
 }
 
 int setDim(int tmp) {
-	tmp = map(tmp, 0, 255, 100, 20);
+	tmp = map(tmp, 0, 255, DIM_MAX, DIM_MIN);
 	if(tmp >= DIM_MAX) {
 		return dim = DIM_MAX;
 	}
@@ -93,15 +110,13 @@ void setup()
 	Particle.publish("ip", WiFi.localIP().toString(), PRIVATE);
 	Serial.begin(9600);
 
-	// Relay pins (ignore this)
-	pinMode(D0, OUTPUT);
-	pinMode(D1, OUTPUT);
-	digitalWrite(D0, LOW);
-	digitalWrite(D1, LOW);
 
 	// Zero Cross setup
 	pinMode(PIN_ZERO_CROSS, INPUT);
 	pinMode(AC_PIN, OUTPUT);
+
+	pinMode(DBG_ZC_PIN, OUTPUT);
+	pinMode(DBG_TMR_PIN, OUTPUT);
 	timer.begin(dim_check, freqStep, uSec, TIMER5);
 	// Attach an Interupt to Pin 2 (interupt 0) for Zero Cross Detection
 	attachInterrupt(PIN_ZERO_CROSS, zero_cross_detect, RISING);
@@ -110,14 +125,14 @@ void setup()
 	e131.begin();
 }
 
-int count = 0;
+// int count = 0;
 void loop() {
-	count ++;
+	// count ++;
 	e131.parsePacket();
 
-	if (count%50 == 0) {
-	    Serial.printlnf("R:%d G:%d B:%d",e131.data[1],e131.data[2],e131.data[3]);
-	}
+	// if (count%50 == 0) {
+	//     Serial.printlnf("R:%d G:%d B:%d",e131.data[1],e131.data[2],e131.data[3]);
+	// }
 
 	setDim(e131.data[1]);
 
