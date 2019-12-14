@@ -40,7 +40,7 @@ void ZCDimmer::begin(int PIN_ZC_IN, int PIN_PWM_OUT)
 	// TRIAC control
 	pinMode(this->PIN_PWM_OUT, OUTPUT);
 
-	// pinMode(D4, OUTPUT);
+	pinMode(D4, OUTPUT);
 
 	// Setup the timer
 	timer.begin(ZCDimmer::timer_dim, freqStep, uSec, TIMER5);
@@ -79,8 +79,8 @@ void ZCDimmer::timer_dim()
 	{
 		if(ZCDimmer::getInstance()->counter >= ZCDimmer::getInstance()->dim)
 		{
-			if (ZCDimmer::getInstance()->dim != ZCDimmer::DIM_MAX)
-			{
+			// if (ZCDimmer::getInstance()->dim != ZCDimmer::DIM_MAX)
+			// {
 				// turn on output
 				digitalWrite(ZCDimmer::getInstance()->PIN_PWM_OUT, HIGH);
 
@@ -88,7 +88,7 @@ void ZCDimmer::timer_dim()
 				ZCDimmer::getInstance()->counter = 0;
 				//reset zero cross detection
 				ZCDimmer::getInstance()->isOff = false;
-			}
+			// }
 		}
 		else
 		{
@@ -103,16 +103,16 @@ void ZCDimmer::timer_dim()
  */
 void ZCDimmer::isr_on_zero_cross()
 {
-	// static bool dbg = false;
-	static unsigned long last_interrupt_time = 0;
-	unsigned long interrupt_time = micros();
+	static bool dbg = false;
+	// static unsigned long last_interrupt_time = 0;
+	// unsigned long interrupt_time = micros();
 
 
 	// If interrupts come faster than 1ms, assume it's a bounce and ignore
-	if (interrupt_time - last_interrupt_time > 1000)
-	{
-		// dbg = !dbg;
-		// digitalWrite(D4, dbg);
+	// if (interrupt_time - last_interrupt_time > 4000)
+	// {
+		dbg = !dbg;
+		digitalWrite(D4, dbg);
 		// keep track of when we turn off the output, ie: at a ZC
 		ZCDimmer::getInstance()->isOff = true;
 		// begin counting the (dim) amount before turning on
@@ -122,7 +122,7 @@ void ZCDimmer::isr_on_zero_cross()
 		// Which is the only place we can turn off the TRIAC
 		digitalWrite(ZCDimmer::getInstance()->PIN_PWM_OUT, LOW);
 
-		last_interrupt_time = interrupt_time;
-	}
+	// 	last_interrupt_time = interrupt_time;
+	// }
 }
 

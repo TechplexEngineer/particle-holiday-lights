@@ -18,5 +18,5 @@ void setup()
 void loop()
 {
   e131.parsePacket();
-  ZCDimmer::getInstance()->setBrightness(e131.data[1]);
+  ZCDimmer::getInstance()->setBrightness(e131.data[3]);
 }
