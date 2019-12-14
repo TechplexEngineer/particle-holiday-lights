@@ -50,8 +50,8 @@ class ZCDimmer
 		// Variable to use as a counter volatile as it is in an interrupt
 		volatile int counter = 0;
 
-		int DIM_MIN = 60;
-		int DIM_MAX = 117;
+		static const int DIM_MIN = 60;
+		static const int DIM_MAX = 115;
 		// Dimming level (0-128)  0 = on, 128 = 0ff
 		int dim = DIM_MIN;
 };
